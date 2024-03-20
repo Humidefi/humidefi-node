@@ -40,6 +40,10 @@ sp-std = { version = "8.0.0", default-features = false, git = "https://github.co
 sp-transaction-pool = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 sp-version = { version = "22.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 
+pallet-contracts = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+pallet-contracts-primitives = { version = "24.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+pallet-insecure-randomness-collective-flip = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
+
 # Used for the node template's RPCs
 frame-system-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
 pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v1.0.0" }
@@ -91,6 +95,9 @@ std = [
 	"sp-transaction-pool/std",
 	"sp-version/std",
 	"substrate-wasm-builder",
+	"pallet-contracts-primitives/std",
+	"pallet-contracts/std",
+	"pallet-insecure-randomness-collective-flip/std",
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
@@ -105,6 +112,8 @@ runtime-benchmarks = [
 	"pallet-dex/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",
+	"sp-runtime/runtime-benchmarks",
+	"pallet-contracts/runtime-benchmarks",
 ]
 try-runtime = [
 	"frame-try-runtime/try-runtime",
@@ -120,4 +129,7 @@ try-runtime = [
 	"pallet-dex/try-runtime",
 	"pallet-timestamp/try-runtime",
 	"pallet-transaction-payment/try-runtime",
+	"pallet-transaction-payment/try-runtime",
+	"pallet-contracts/try-runtime",
+	"pallet-insecure-randomness-collective-flip/try-runtime",
 ]

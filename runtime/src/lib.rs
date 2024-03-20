@@ -26,9 +26,10 @@ use sp_version::RuntimeVersion;
 // A few exports that help ease life for downstream crates.
 pub use frame_support::{
 	construct_runtime, parameter_types,
+	dispatch::DispatchClass,
 	traits::{
 		ConstBool, ConstU128, ConstU32, ConstU64, ConstU8, KeyOwnerProofSystem, Randomness,
-		StorageInfo,
+		StorageInfo, Nothing
 	},
 	weights::{
 		constants::{
@@ -137,7 +138,17 @@ pub fn native_version() -> NativeVersion {
 	NativeVersion { runtime_version: VERSION, can_author_with: Default::default() }
 }
 
+// const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
+
+/// We assume that ~10% of the block weight is consumed by `on_initialize` handlers.
+/// This is used to limit the maximal weight of a single extrinsic.
+const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
+/// We allow `Normal` extrinsics to fill up the block up to 75%, the rest can be used
+/// by  Operational  extrinsics.
 const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
+/// We allow for 2 seconds of compute with a 6 second average block time, with maximum proof size.
+const MAXIMUM_BLOCK_WEIGHT: Weight =
+	Weight::from_parts(WEIGHT_REF_TIME_PER_SECOND.saturating_mul(2), u64::MAX);
 
 parameter_types! {
 	pub const BlockHashCount: BlockNumber = 2400;
@@ -151,6 +162,24 @@ parameter_types! {
 	pub BlockLength: frame_system::limits::BlockLength = frame_system::limits::BlockLength
 		::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO);
 	pub const SS58Prefix: u8 = 42;
+	pub RuntimeBlockWeights: frame_system::limits::BlockWeights = frame_system::limits::BlockWeights::builder()
+		.base_block(BlockExecutionWeight::get())
+		.for_class(DispatchClass::all(), |weights| {
+			weights.base_extrinsic = ExtrinsicBaseWeight::get();
+		})
+		.for_class(DispatchClass::Normal, |weights| {
+			weights.max_total = Some(NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT);
+		})
+		.for_class(DispatchClass::Operational, |weights| {
+			weights.max_total = Some(MAXIMUM_BLOCK_WEIGHT);
+			// Operational transactions have some extra reserved space, so that they
+			// are included even if block reached `MAXIMUM_BLOCK_WEIGHT`.
+			weights.reserved = Some(
+				MAXIMUM_BLOCK_WEIGHT - NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT
+			);
+		})
+		.avg_block_initialization(AVERAGE_ON_INITIALIZE_RATIO)
+		.build_or_panic();
 }
 
 // Configure FRAME pallets to include in runtime.
@@ -314,6 +343,57 @@ impl pallet_dex::Config for Runtime {
 	type Fungibles = Assets;
 }
 
+pub const MILLICENTS: Balance = 1_000_000_000;
+pub const CENTS: Balance = 1_000 * MILLICENTS; // assume this is worth about a cent.
+pub const DOLLARS: Balance = 100 * CENTS;
+
+parameter_types! {
+	pub const DepositPerItem: Balance = 1 * 15 * CENTS + (0) * 6 * CENTS;
+	pub const DepositPerByte: Balance = 0 * 15 * CENTS + (1) * 6 * CENTS;
+	pub const DefaultDepositLimit: Balance =  1024 * 15 * CENTS + (1024 * 1024) * 6 * CENTS;
+	pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
+	pub CodeHashLockupDepositPercent: Perbill = Perbill::from_percent(30);
+}
+
+impl pallet_contracts::Config for Runtime {
+	type Time = Timestamp;
+	type Randomness = RandomnessCollectiveFlip;
+	type Currency = Balances;
+	type RuntimeEvent = RuntimeEvent;
+	type RuntimeCall = RuntimeCall;
+	/// The safest default is to allow no calls at all.
+	///
+	/// Runtimes should whitelist dispatchables that are allowed to be called from contracts
+	/// and make sure they are stable. Dispatchables exposed to contracts are not allowed to
+	/// change because that would break already deployed contracts. The `Call` structure itself
+	/// is not allowed to change the indices of existing pallets, too.
+	type CallFilter = Nothing;
+	type DepositPerItem = DepositPerItem;
+	type DepositPerByte = DepositPerByte;
+	type DefaultDepositLimit = DefaultDepositLimit;
+	type CallStack = [pallet_contracts::Frame<Self>; 5];
+	type WeightPrice = pallet_transaction_payment::Pallet<Self>;
+	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
+	type ChainExtension = ();
+	type Schedule = Schedule;
+	type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
+	type MaxCodeLen = ConstU32<{ 123 * 1024 }>;
+	type MaxStorageKeyLen = ConstU32<128>;
+	type UnsafeUnstableInterface = ConstBool<false>;
+	type MaxDebugBufferLen = ConstU32<{ 2 * 1024 * 1024 }>;
+	//type RuntimeHoldReason = RuntimeHoldReason;
+	#[cfg(not(feature = "runtime-benchmarks"))]
+	type Migrations = ();
+	#[cfg(feature = "runtime-benchmarks")]
+	type Migrations = pallet_contracts::migration::codegen::BenchMigrations;
+	//type MaxDelegateDependencies = ConstU32<32>;
+	//type CodeHashLockupDepositPercent = CodeHashLockupDepositPercent;
+	//type Debug = ();
+	//type Environment = ();
+}
+
+impl pallet_insecure_randomness_collective_flip::Config for Runtime {}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub struct Runtime {
@@ -327,7 +407,9 @@ construct_runtime!(
 		Assets: pallet_assets,
 		// Include the custom logic from the pallet-template in the runtime.
 		TemplateModule: pallet_template,
-		DexModule: pallet_dex
+		DexModule: pallet_dex,
+		Contracts: pallet_contracts,
+		RandomnessCollectiveFlip: pallet_insecure_randomness_collective_flip,
 	}
 );
 
@@ -363,6 +445,11 @@ pub type Executive = frame_executive::Executive<
 	AllPalletsWithSystem,
 >;
 
+type EventRecord = frame_system::EventRecord<
+	<Runtime as frame_system::Config>::RuntimeEvent,
+	<Runtime as frame_system::Config>::Hash,
+>;
+
 #[cfg(feature = "runtime-benchmarks")]
 #[macro_use]
 extern crate frame_benchmarking;
@@ -377,6 +464,7 @@ mod benches {
 		[pallet_sudo, Sudo]
 		[pallet_asset, Assets]
 		[pallet_template, TemplateModule]
+		[pallet_contracts, Contracts]
 	);
 }
 
@@ -545,6 +633,80 @@ impl_runtime_apis! {
 		}
 		fn query_length_to_fee(length: u32) -> Balance {
 			TransactionPayment::length_to_fee(length)
+		}
+	}
+
+	impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash, EventRecord> for Runtime
+	{
+		fn call(
+			origin: AccountId,
+			dest: AccountId,
+			value: Balance,
+			gas_limit: Option<Weight>,
+			storage_deposit_limit: Option<Balance>,
+			input_data: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractExecResult<Balance, EventRecord> {
+			let gas_limit = gas_limit.unwrap_or(RuntimeBlockWeights::get().max_block);
+			Contracts::bare_call(
+				origin,
+				dest,
+				value,
+				gas_limit,
+				storage_deposit_limit,
+				input_data,
+				pallet_contracts::DebugInfo::UnsafeDebug,
+				pallet_contracts::CollectEvents::UnsafeCollect,
+				pallet_contracts::Determinism::Enforced,
+			)
+		}
+
+		fn instantiate(
+			origin: AccountId,
+			value: Balance,
+			gas_limit: Option<Weight>,
+			storage_deposit_limit: Option<Balance>,
+			code: pallet_contracts_primitives::Code<Hash>,
+			data: Vec<u8>,
+			salt: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance, EventRecord>
+		{
+			let gas_limit = gas_limit.unwrap_or(RuntimeBlockWeights::get().max_block);
+			Contracts::bare_instantiate(
+				origin,
+				value,
+				gas_limit,
+				storage_deposit_limit,
+				code,
+				data,
+				salt,
+				pallet_contracts::DebugInfo::UnsafeDebug,
+				pallet_contracts::CollectEvents::UnsafeCollect,
+			)
+		}
+
+		fn upload_code(
+			origin: AccountId,
+			code: Vec<u8>,
+			storage_deposit_limit: Option<Balance>,
+			determinism: pallet_contracts::Determinism,
+		) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance>
+		{
+			Contracts::bare_upload_code(
+				origin,
+				code,
+				storage_deposit_limit,
+				determinism,
+			)
+		}
+
+		fn get_storage(
+			address: AccountId,
+			key: Vec<u8>,
+		) -> pallet_contracts_primitives::GetStorageResult {
+			Contracts::get_storage(
+				address,
+				key
+			)
 		}
 	}
 

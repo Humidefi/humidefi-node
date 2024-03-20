@@ -330,25 +330,41 @@ pub mod pallet {
 				lp_token_balance: FixedU128::from_inner(lp_token_balance)
 			};
 
-			AccountLiquidityPoolStorage::<T>::mutate(
-				(who, asset_pairs), |query| {
-					let mut bounded_vec_account_liquidity_pools: BoundedVec<AccountLiquidityPool<T>, ConstU32<100>> = Default::default();
+			let account_liquidity_pool_key = (who.clone(), asset_pairs.clone());
+			let existing_liquidity_pools = AccountLiquidityPoolStorage::<T>::get(account_liquidity_pool_key)
+				.ok_or::<Error<T>>(Error::<T>::AccountLiquidityPoolDoesNotExists.into())
+				.and_then(|value| Ok(value))?;
 
-					if let Some(existing_bounded_vec_account_liquidity_pools) = query {
-						let mut last_index = 0u32.into();
-						if let Some(account_liquidity_pool) = existing_bounded_vec_account_liquidity_pools.last() {
-							last_index = account_liquidity_pool.index;
+			let account_liquidity_pools = existing_liquidity_pools.to_vec();
+			if account_liquidity_pools.len() > 0 {
+				AccountLiquidityPoolStorage::<T>::mutate(
+					(who, asset_pairs), |query| {
+						let mut bounded_vec_account_liquidity_pools: BoundedVec<AccountLiquidityPool<T>, ConstU32<100>> = Default::default();
+
+						if let Some(existing_bounded_vec_account_liquidity_pools) = query {
+							let mut last_index = 0u32.into();
+							if let Some(account_liquidity_pool) = existing_bounded_vec_account_liquidity_pools.last() {
+								last_index = account_liquidity_pool.index;
+							}
+
+							new_account_liquidity_pool.index = last_index.ensure_add(1).expect(Error::<T>::AccountLiquidityIndexArithmeticError.into());
+							existing_bounded_vec_account_liquidity_pools.try_push(new_account_liquidity_pool.clone()).expect(Error::<T>::AccountLiquidityBoundedVecError.into());
+
+							bounded_vec_account_liquidity_pools = existing_bounded_vec_account_liquidity_pools.clone();
 						}
 
-						new_account_liquidity_pool.index = last_index.ensure_add(1).expect(Error::<T>::AccountLiquidityIndexArithmeticError.into());
-						existing_bounded_vec_account_liquidity_pools.try_push(new_account_liquidity_pool.clone());
-
-						bounded_vec_account_liquidity_pools = existing_bounded_vec_account_liquidity_pools.clone();
+						*query = Some(bounded_vec_account_liquidity_pools)
 					}
+				);
+			} else {
+				let mut bounded_vec_account_liquidity_pools: BoundedVec<AccountLiquidityPool<T>, ConstU32<100>> = Default::default();
+				bounded_vec_account_liquidity_pools.try_push(new_account_liquidity_pool.clone()).expect(Error::<T>::AccountLiquidityBoundedVecError.into());
 
-					*query = Some(bounded_vec_account_liquidity_pools)
-				}
-			);
+				AccountLiquidityPoolStorage::<T>::insert(
+					(who, asset_pairs),
+					bounded_vec_account_liquidity_pools,
+				);
+			}
 
 			Self::deposit_event(Event::LiquidityPoolProvidedSuccessfully {
 				account_liquidity_pool: new_account_liquidity_pool.clone()
@@ -475,18 +491,14 @@ pub mod pallet {
 
 			LiquidityPoolStorage::<T>::mutate(
 				asset_pairs.clone(), |query| {
-					match query {
-						Some(liquidity_pool) => {
-							*query = Some(
-								LiquidityPool::<T> {
-									asset_pairs: asset_pairs.clone(),
-									asset_x_balance: update_asset_x_balance,
-									asset_y_balance: update_asset_y_balance,
-									lp_token: liquidity_pool.lp_token,
-								}
-							);
-						},
-						_ => { }
+					if let Some(liquidity_pool) = query {
+						*query = Some(
+							LiquidityPool::<T> {
+							asset_pairs: asset_pairs.clone(),
+							asset_x_balance: update_asset_x_balance,
+							asset_y_balance: update_asset_y_balance,
+							lp_token: liquidity_pool.lp_token,
+						});
 					}
 				}
 			);
@@ -537,18 +549,15 @@ pub mod pallet {
 
 			LiquidityPoolStorage::<T>::mutate(
 				asset_pairs.clone(), |query| {
-					match query {
-						Some(liquidity_pool) => {
-							*query = Some(
-								LiquidityPool::<T> {
-									asset_pairs: asset_pairs.clone(),
-									asset_x_balance: update_asset_x_balance,
-									asset_y_balance: update_asset_y_balance,
-									lp_token: liquidity_pool.lp_token,
-								}
-							);
-						},
-						_ => { }
+					if let Some(liquidity_pool) = query {
+						*query = Some(
+							LiquidityPool::<T> {
+								asset_pairs: asset_pairs.clone(),
+								asset_x_balance: update_asset_x_balance,
+								asset_y_balance: update_asset_y_balance,
+								lp_token: liquidity_pool.lp_token,
+							}
+						);
 					}
 				}
 			);
