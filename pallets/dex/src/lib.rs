@@ -147,7 +147,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			
-			<Self as humidefi_interface::DexCaller>::new_liquidity(
+			<Pallet<T> as humidefi_interface::DexCaller>::new_liquidity(
 				who,
 				asset_pair,
 				asset_x_balance,
@@ -168,7 +168,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			<Self as humidefi_interface::DexCaller>::redeem_liquidity(
+			<Pallet<T> as humidefi_interface::DexCaller>::redeem_liquidity(
 				who,
 				asset_pair,
 				lp_token,
@@ -189,7 +189,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			
-			<Self as humidefi_interface::DexCaller>::swap_exact_in_for_out(
+			<Pallet<T> as humidefi_interface::DexCaller>::swap_exact_in_for_out(
 				who,
 				asset_exact_in,
 				asset_exact_in_balance,
@@ -210,7 +210,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			
-			<Self as humidefi_interface::DexCaller>::swap_in_for_exact_out(
+			<Pallet<T> as humidefi_interface::DexCaller>::swap_in_for_exact_out(
 				who,
 				asset_exact_out,
 				asset_exact_out_balance,
@@ -231,7 +231,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			<Self as humidefi_interface::DexCaller>::transfer_asset(
+			<Pallet<T> as humidefi_interface::DexCaller>::transfer_asset(
 				who,
 				asset,
 				asset_balance,
@@ -245,7 +245,7 @@ pub mod pallet {
 
 	impl<T: Config> Pallet<T> {
 		pub fn get_dex_account() -> <T as frame_system::Config>::AccountId {
-			<Self as humidefi_interface::DexHelpers>::get_dex_account()
+			<Pallet<T> as humidefi_interface::DexHelpers>::get_dex_account()
 		}
 	}
 }

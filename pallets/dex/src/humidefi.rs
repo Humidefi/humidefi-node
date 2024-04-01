@@ -42,15 +42,15 @@ impl<T: Config> DexCaller for Pallet<T> {
 		asset_x_balance:  Self::AssetBalance,
 		asset_y_balance:  Self::AssetBalance,
 	) -> Result<(), DispatchError> {
-		let dex_account_id: Self::AccountId = <pallet::Pallet<T> as DexHelpers>::get_dex_account();
+		let dex_account_id: Self::AccountId = <Pallet<T> as DexHelpers>::get_dex_account();
 
-		<pallet::Pallet<T> as DexHelpers>::check_asset_balance(
+		<Pallet<T> as DexHelpers>::check_asset_balance(
 			who.clone(),
 			asset_pair.clone().asset_x,
 			asset_x_balance,
 		).expect(Error::<T>::CheckAssetXBalanceError.into());
 
-		<pallet::Pallet<T> as DexHelpers>::check_asset_balance(
+		<Pallet<T> as DexHelpers>::check_asset_balance(
 			who.clone(),
 			asset_pair.clone().asset_y,
 			asset_x_balance,
@@ -72,7 +72,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 			frame_support::traits::tokens::Preservation::Expendable,
 		)?;
 
-		let mint_liquidity = <pallet::Pallet<T> as DexHelpers>::compute_and_mint_lp_token(
+		let mint_liquidity = <Pallet<T> as DexHelpers>::compute_and_mint_lp_token(
 			asset_pair.clone(),
 			asset_x_balance,
 			asset_y_balance,
@@ -81,7 +81,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 		let lp_token: Self::AssetId = mint_liquidity.0;
 		let lp_token_balance = mint_liquidity.1;
 
-		<pallet::Pallet<T> as DexHelpers>::check_asset_balance(
+		<Pallet<T> as DexHelpers>::check_asset_balance(
 			dex_account_id.clone(),
 			lp_token,
 			lp_token_balance,
@@ -95,7 +95,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 			frame_support::traits::tokens::Preservation::Expendable,
 		)?;
 
-		let get_liquidity_pool: Option<<LiquidityPool<T> as LiquidityPoolTrait>::LiquidityPool> = <pallet::Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
+		let get_liquidity_pool: Option<<LiquidityPool<T> as LiquidityPoolTrait>::LiquidityPool> = <Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
 		match get_liquidity_pool {
 			Some(liquidity_pool) => {
 				let update_asset_x_balance = liquidity_pool
@@ -106,7 +106,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 					.asset_y_balance
 					.add(FixedU128::from_inner(asset_y_balance));
 
-				let update_price = <pallet::Pallet<T> as DexHelpers>::compute_price(
+				let update_price = <Pallet<T> as DexHelpers>::compute_price(
 					update_asset_x_balance.into_inner(), 
 					update_asset_y_balance.into_inner()
 				).expect(Error::<T>::ComputePriceError.into());
@@ -131,7 +131,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 				});
 			},
 			None => {
-				let new_price = <pallet::Pallet<T> as DexHelpers>::compute_price(
+				let new_price = <Pallet<T> as DexHelpers>::compute_price(
 					asset_x_balance,
 					asset_y_balance
 				).expect(Error::<T>::ComputePriceError.into());
@@ -161,7 +161,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 			lp_token_balance: FixedU128::from_inner(lp_token_balance),
 		};
 
-		let get_account_liquidity_pools: Option<BoundedVec<<AccountLiquidityPool<T> as AccountLiquidityPoolTrait>::AccountLiquidityPool, ConstU32<100>>> = <pallet::Pallet<T> as DexHelpers>::get_account_liquidity_pools(who.clone(), asset_pair.clone());
+		let get_account_liquidity_pools: Option<BoundedVec<<AccountLiquidityPool<T> as AccountLiquidityPoolTrait>::AccountLiquidityPool, ConstU32<100>>> = <Pallet<T> as DexHelpers>::get_account_liquidity_pools(who.clone(), asset_pair.clone());
 		match get_account_liquidity_pools {
 			Some(account_liquidity_pools) => {
 				let mut last_id = 0u64.into();
@@ -210,12 +210,12 @@ impl<T: Config> DexCaller for Pallet<T> {
 		lp_token: Self::AssetId,
 		id: Self::AccountLiquidityPoolId,
 	) -> Result<(), DispatchError> {
-		let get_liquidity_pool: Option<<LiquidityPool<T> as LiquidityPoolTrait>::LiquidityPool> = <pallet::Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
+		let get_liquidity_pool: Option<<LiquidityPool<T> as LiquidityPoolTrait>::LiquidityPool> = <Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
 		if !get_liquidity_pool.is_some() {
 			return Err(Error::<T>::LiquidityPoolDoesNotExists.into())
 		}
 
-		let asset_xy_balances = <pallet::Pallet<T> as DexHelpers>::compute_xy_assets(
+		let asset_xy_balances = <Pallet<T> as DexHelpers>::compute_xy_assets(
 			who.clone(), 
 			asset_pair.clone(), 
 			lp_token, 
@@ -226,15 +226,15 @@ impl<T: Config> DexCaller for Pallet<T> {
 		let asset_y_balance = asset_xy_balances.1;
 		let lp_token_balance = asset_xy_balances.2;
 
-		let dex_account_id: Self::AccountId = <pallet::Pallet<T> as DexHelpers>::get_dex_account();
+		let dex_account_id: Self::AccountId = <Pallet<T> as DexHelpers>::get_dex_account();
 
-		<pallet::Pallet<T> as DexHelpers>::check_asset_balance(
+		<Pallet<T> as DexHelpers>::check_asset_balance(
 			dex_account_id.clone(),
 			asset_pair.clone().asset_x,
 			asset_x_balance,
 		).expect(Error::<T>::CheckAssetXBalanceError.into());
 
-		<pallet::Pallet<T> as DexHelpers>::check_asset_balance(
+		<Pallet<T> as DexHelpers>::check_asset_balance(
 			dex_account_id.clone(),
 			asset_pair.clone().asset_x,
 			asset_y_balance,
@@ -266,7 +266,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 					.asset_y_balance
 					.sub(FixedU128::from_inner(asset_y_balance));
 
-				let update_price = <pallet::Pallet<T> as DexHelpers>::compute_price(
+				let update_price = <Pallet<T> as DexHelpers>::compute_price(
 					update_asset_x_balance.into_inner(), 
 					update_asset_y_balance.into_inner()
 				).expect(Error::<T>::ComputePriceError.into());
@@ -301,9 +301,9 @@ impl<T: Config> DexCaller for Pallet<T> {
 		asset_exact_in_balance: Self::AssetBalance,
 		asset_max_out: Self::AssetId,
 	) -> Result<(), DispatchError> {
-		let dex_account_id: Self::AccountId = <pallet::Pallet<T> as DexHelpers>::get_dex_account();
+		let dex_account_id: Self::AccountId = <Pallet<T> as DexHelpers>::get_dex_account();
 		
-		<pallet::Pallet<T> as DexHelpers>::check_asset_balance(
+		<Pallet<T> as DexHelpers>::check_asset_balance(
 			who.clone(),
 			asset_exact_in,
 			asset_exact_in_balance,
@@ -318,20 +318,20 @@ impl<T: Config> DexCaller for Pallet<T> {
 		)?;
 
 		let asset_pair = AssetPairs::<T> { asset_x: asset_exact_in, asset_y: asset_max_out };
-		let get_liquidity_pool = <pallet::Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
+		let get_liquidity_pool = <Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
 		match get_liquidity_pool {
 			Some(liquidity_pool) => {
 				let mut price = FixedU128::from_inner(0);
 
 				if asset_exact_in == liquidity_pool.asset_pair.asset_x {
-					price = <pallet::Pallet<T> as DexHelpers>::compute_price(
+					price = <Pallet<T> as DexHelpers>::compute_price(
 						liquidity_pool.asset_x_balance.into_inner(),
 						liquidity_pool.asset_y_balance.into_inner()
 					).expect(Error::<T>::ComputePriceError.into());
 				}
 
 				if asset_exact_in == liquidity_pool.asset_pair.asset_y {
-					price = <pallet::Pallet<T> as DexHelpers>::compute_price(
+					price = <Pallet<T> as DexHelpers>::compute_price(
 						liquidity_pool.asset_y_balance.into_inner(),
 						liquidity_pool.asset_x_balance.into_inner()
 					).expect(Error::<T>::ComputePriceError.into());
@@ -339,7 +339,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 
 				let asset_max_out_balance = FixedU128::from_inner(price.into_inner()).mul(FixedU128::from_inner(asset_exact_in_balance));
 
-				<pallet::Pallet<T> as DexHelpers>::check_asset_balance(
+				<Pallet<T> as DexHelpers>::check_asset_balance(
 					dex_account_id.clone(),
 					asset_max_out,
 					asset_max_out_balance.into_inner(),
@@ -376,7 +376,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 						.add(FixedU128::from_inner(asset_exact_in_balance));
 				}
 
-				let update_price = <pallet::Pallet<T> as DexHelpers>::compute_price(
+				let update_price = <Pallet<T> as DexHelpers>::compute_price(
 					update_asset_x_balance.into_inner(), 
 					update_asset_y_balance.into_inner()
 				).expect(Error::<T>::ComputePriceError.into());
@@ -410,9 +410,9 @@ impl<T: Config> DexCaller for Pallet<T> {
 		asset_exact_out_balance: Self::AssetBalance,
 		asset_min_in: Self::AssetId,
 	) -> Result<(), DispatchError> {
-		let dex_account_id: Self::AccountId = <pallet::Pallet<T> as DexHelpers>::get_dex_account();
+		let dex_account_id: Self::AccountId = <Pallet<T> as DexHelpers>::get_dex_account();
 		
-		<pallet::Pallet<T> as DexHelpers>::check_asset_balance(
+		<Pallet<T> as DexHelpers>::check_asset_balance(
 			dex_account_id.clone(),
 			asset_exact_out,
 			asset_exact_out_balance,
@@ -427,20 +427,20 @@ impl<T: Config> DexCaller for Pallet<T> {
 		)?;
 
 		let asset_pair = AssetPairs::<T> { asset_x: asset_min_in, asset_y: asset_exact_out };
-		let get_liquidity_pool = <pallet::Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
+		let get_liquidity_pool = <Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
 		match get_liquidity_pool {
 			Some(liquidity_pool) => {
 				let mut price = FixedU128::from_inner(0);
 
 				if asset_min_in == liquidity_pool.asset_pair.asset_x {
-					price = <pallet::Pallet<T> as DexHelpers>::compute_price(
+					price = <Pallet<T> as DexHelpers>::compute_price(
 						liquidity_pool.asset_x_balance.into_inner(),
 						liquidity_pool.asset_y_balance.into_inner()
 					).expect(Error::<T>::ComputePriceError.into());
 				}
 
 				if asset_min_in == liquidity_pool.asset_pair.asset_y {
-					price = <pallet::Pallet<T> as DexHelpers>::compute_price(
+					price = <Pallet<T> as DexHelpers>::compute_price(
 						liquidity_pool.asset_y_balance.into_inner(),
 						liquidity_pool.asset_x_balance.into_inner()
 					).expect(Error::<T>::ComputePriceError.into());
@@ -448,7 +448,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 
 				let asset_min_in_balance = FixedU128::from_inner(price.into_inner()).mul(FixedU128::from_inner(asset_exact_out_balance));
 
-				<pallet::Pallet<T> as DexHelpers>::check_asset_balance(
+				<Pallet<T> as DexHelpers>::check_asset_balance(
 					who.clone(),
 					asset_min_in,
 					asset_min_in_balance.into_inner(),
@@ -485,7 +485,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 						.add(asset_min_in_balance);
 				}
 
-				let update_price = <pallet::Pallet<T> as DexHelpers>::compute_price(
+				let update_price = <Pallet<T> as DexHelpers>::compute_price(
 					update_asset_x_balance.into_inner(), 
 					update_asset_y_balance.into_inner()
 				).expect(Error::<T>::ComputePriceError.into());
@@ -519,7 +519,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 		asset_balance: Self::AssetBalance,
 		account_id: Self::AccountId,
 	) -> Result<(), DispatchError> {
-		<pallet::Pallet<T> as DexHelpers>::check_asset_balance(
+		<Pallet<T> as DexHelpers>::check_asset_balance(
 			who.clone(),
 			asset,
 			asset_balance,
