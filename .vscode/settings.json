@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./pallets/dex/Cargo.toml"
+    ]
+}

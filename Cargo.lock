@@ -2509,6 +2509,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 
 [[package]]
+name = "humidefi-interface"
+version = "4.0.0-dev"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "pallet-assets",
+ "pallet-balances",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+]
+
+[[package]]
 name = "hyper"
 version = "0.14.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4369,6 +4385,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "humidefi-interface",
  "pallet-assets",
  "pallet-balances",
  "parity-scale-codec",
@@ -4526,6 +4543,10 @@ dependencies = [
  "sp-runtime",
  "sp-weights",
 ]
+
+[[package]]
+name = "pallets"
+version = "0.1.0"
 
 [[package]]
 name = "parity-db"
