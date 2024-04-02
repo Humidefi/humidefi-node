@@ -42,7 +42,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 		asset_x_balance:  Self::AssetBalance,
 		asset_y_balance:  Self::AssetBalance,
 	) -> Result<(), DispatchError> {
-		let dex_account_id: Self::AccountId = <Pallet<T> as DexHelpers>::get_dex_account();
+		let dex_account_id = <Pallet<T> as DexHelpers>::get_dex_account();
 
 		<Pallet<T> as DexHelpers>::check_asset_balance(
 			who.clone(),
@@ -95,7 +95,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 			frame_support::traits::tokens::Preservation::Expendable,
 		)?;
 
-		let get_liquidity_pool: Option<<LiquidityPool<T> as LiquidityPoolTrait>::LiquidityPool> = <Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
+		let get_liquidity_pool = <Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
 		match get_liquidity_pool {
 			Some(liquidity_pool) => {
 				let update_asset_x_balance = liquidity_pool
@@ -161,7 +161,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 			lp_token_balance: FixedU128::from_inner(lp_token_balance),
 		};
 
-		let get_account_liquidity_pools: Option<BoundedVec<<AccountLiquidityPool<T> as AccountLiquidityPoolTrait>::AccountLiquidityPool, ConstU32<100>>> = <Pallet<T> as DexHelpers>::get_account_liquidity_pools(who.clone(), asset_pair.clone());
+		let get_account_liquidity_pools = <Pallet<T> as DexHelpers>::get_account_liquidity_pools(who.clone(), asset_pair.clone());
 		match get_account_liquidity_pools {
 			Some(account_liquidity_pools) => {
 				let mut last_id = 0u64.into();
@@ -210,7 +210,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 		lp_token: Self::AssetId,
 		id: Self::AccountLiquidityPoolId,
 	) -> Result<(), DispatchError> {
-		let get_liquidity_pool: Option<<LiquidityPool<T> as LiquidityPoolTrait>::LiquidityPool> = <Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
+		let get_liquidity_pool = <Pallet<T> as DexHelpers>::get_liquidity_pool(asset_pair.clone());
 		if !get_liquidity_pool.is_some() {
 			return Err(Error::<T>::LiquidityPoolDoesNotExists.into())
 		}
@@ -226,7 +226,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 		let asset_y_balance = asset_xy_balances.1;
 		let lp_token_balance = asset_xy_balances.2;
 
-		let dex_account_id: Self::AccountId = <Pallet<T> as DexHelpers>::get_dex_account();
+		let dex_account_id = <Pallet<T> as DexHelpers>::get_dex_account();
 
 		<Pallet<T> as DexHelpers>::check_asset_balance(
 			dex_account_id.clone(),
@@ -301,7 +301,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 		asset_exact_in_balance: Self::AssetBalance,
 		asset_max_out: Self::AssetId,
 	) -> Result<(), DispatchError> {
-		let dex_account_id: Self::AccountId = <Pallet<T> as DexHelpers>::get_dex_account();
+		let dex_account_id = <Pallet<T> as DexHelpers>::get_dex_account();
 		
 		<Pallet<T> as DexHelpers>::check_asset_balance(
 			who.clone(),
@@ -410,7 +410,7 @@ impl<T: Config> DexCaller for Pallet<T> {
 		asset_exact_out_balance: Self::AssetBalance,
 		asset_min_in: Self::AssetId,
 	) -> Result<(), DispatchError> {
-		let dex_account_id: Self::AccountId = <Pallet<T> as DexHelpers>::get_dex_account();
+		let dex_account_id = <Pallet<T> as DexHelpers>::get_dex_account();
 		
 		<Pallet<T> as DexHelpers>::check_asset_balance(
 			dex_account_id.clone(),
