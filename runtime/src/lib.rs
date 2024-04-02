@@ -341,6 +341,14 @@ impl pallet_dex::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type NativeBalance = Balances;
 	type Fungibles = Assets;
+	type SwapFee = SwapFeePercent;
+}
+
+pub struct SwapFeePercent;
+impl Get<Perbill> for SwapFeePercent {
+	fn get() -> Perbill {
+		Perbill::from_rational(3u32, 100u32)
+	}
 }
 
 pub const MILLICENTS: Balance = 1_000_000_000;

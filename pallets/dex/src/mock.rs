@@ -5,10 +5,9 @@ use sp_core::H256;
 use sp_runtime::{
 	traits::{BlakeTwo256, IdentityLookup},
 	BuildStorage,
-	FixedU128
+	Perbill
 };
-use sp_runtime::traits::Convert;
-use pallet_dex::AssetBalanceOf;
+use frame_support::pallet_prelude::Get;
 
 type Block = frame_system::mocking::MockBlock<Test>;
 type Balance = u128;
@@ -93,12 +92,13 @@ impl pallet_dex::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type NativeBalance = Balances;
 	type Fungibles = Assets;
+	type SwapFee = SwapFeePercent;
 }
 
-pub struct AssetBalanceConverter;
-impl Convert<AssetBalanceOf<Test>, FixedU128> for AssetBalanceConverter {
-	fn convert(a: AssetBalanceOf<Test>) -> FixedU128 {
-		FixedU128::from_inner(a)
+pub struct SwapFeePercent;
+impl Get<Perbill> for SwapFeePercent {
+	fn get() -> Perbill {
+		Perbill::from_rational(3u32, 100u32)
 	}
 }
 

@@ -85,11 +85,15 @@ pub trait DexHelpers {
 		asset_balance: Self::AssetBalance
 	) -> Result<(), DispatchError>;
 	
-	fn compute_and_mint_lp_token(
+	fn mint_liquidity_pool_token(
 		asset_pair: Self::AssetPairs,
+	) -> Result<Self::AssetId, DispatchError>;
+
+	fn compute_liquidity(
+		lp_token: Self::AssetId,
 		asset_x_balance: Self::AssetBalance, 
 		asset_y_balance: Self::AssetBalance
-	) -> Result<(Self::AssetId, Self::AssetBalance), DispatchError>;
+	) -> Result<Self::AssetBalance, DispatchError>;
 	
 	fn compute_price(
 		asset_x_balance: Self::AssetBalance, 
@@ -102,4 +106,8 @@ pub trait DexHelpers {
 		lp_token: Self::AssetId, 
 		id: Self::AccountLiquidityPoolId
 	) -> Result<(Self::AssetBalance, Self::AssetBalance, Self::AssetBalance), DispatchError>;
+
+	fn compute_swap_fee(
+		asset_balance: Self::AssetBalance
+	) -> Result<FixedU128, DispatchError>;
 }

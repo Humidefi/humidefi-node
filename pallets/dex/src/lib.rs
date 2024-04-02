@@ -11,7 +11,7 @@ mod tests;
 mod humidefi;
 
 use frame_support::{
-	sp_runtime::FixedU128,
+	sp_runtime::{ FixedU128, Perbill },
 	traits::{fungible, fungibles},
 };
 
@@ -38,6 +38,8 @@ pub mod pallet {
 		type Fungibles: fungibles::Inspect<Self::AccountId, AssetId = u32, Balance = u128>
 			+ fungibles::Mutate<Self::AccountId>
 			+ fungibles::Create<Self::AccountId>;
+
+		type SwapFee: Get<Perbill>;
 	}
 
 	pub type BalanceOf<T> = <<T as Config>::NativeBalance as fungible::Inspect<
@@ -124,9 +126,12 @@ pub mod pallet {
 		CheckAssetSwapOutBalanceError,
 		AssetDoesNotHaveEnoughBalance,
 
-		ComputeAndMintLiquidityPoolTokenError,
+		MintLiquidityPoolTokenError,
+
+		ComputeLiquidityError,
 		ComputePriceError,
 		ComputeXYBalancesError,
+		ComputeSwapFeeError,
 		CannotBeZero,
 
 		LiquidityPoolDoesNotExists,

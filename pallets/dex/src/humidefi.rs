@@ -72,14 +72,15 @@ impl<T: Config> DexCaller for Pallet<T> {
 			frame_support::traits::tokens::Preservation::Expendable,
 		)?;
 
-		let mint_liquidity = <Pallet<T> as DexHelpers>::compute_and_mint_lp_token(
-			asset_pair.clone(),
+		let lp_token = <Pallet<T> as DexHelpers>::mint_liquidity_pool_token(
+			asset_pair.clone()
+		).expect(Error::<T>::MintLiquidityPoolTokenError.into());
+
+		let lp_token_balance = <Pallet<T> as DexHelpers>::compute_liquidity(
+			lp_token,
 			asset_x_balance,
 			asset_y_balance,
-		).expect(Error::<T>::ComputeAndMintLiquidityPoolTokenError.into());
-
-		let lp_token: Self::AssetId = mint_liquidity.0;
-		let lp_token_balance = mint_liquidity.1;
+		).expect(Error::<T>::ComputeLiquidityError.into());
 
 		<Pallet<T> as DexHelpers>::check_asset_balance(
 			dex_account_id.clone(),
@@ -337,7 +338,10 @@ impl<T: Config> DexCaller for Pallet<T> {
 					).expect(Error::<T>::ComputePriceError.into());
 				}
 
-				let asset_max_out_balance = FixedU128::from_inner(price.into_inner()).mul(FixedU128::from_inner(asset_exact_in_balance));
+				let asset_out_balance = FixedU128::from_inner(price.into_inner()).mul(FixedU128::from_inner(asset_exact_in_balance));
+				let asset_max_out_balance = <Pallet<T> as DexHelpers>::compute_swap_fee(
+					asset_out_balance.into_inner()
+				).expect(Error::<T>::ComputeSwapFeeError.into());
 
 				<Pallet<T> as DexHelpers>::check_asset_balance(
 					dex_account_id.clone(),
@@ -355,6 +359,8 @@ impl<T: Config> DexCaller for Pallet<T> {
 
 				let mut update_asset_x_balance = FixedU128::from_inner(0);
 				let mut update_asset_y_balance = FixedU128::from_inner(0);
+				let mut update_asset_x_fee = FixedU128::from_inner(0);
+				let mut update_asset_y_fee = FixedU128::from_inner(0);
 
 				if asset_exact_in == liquidity_pool.asset_pair.asset_x {
 					update_asset_x_balance = liquidity_pool
@@ -364,6 +370,8 @@ impl<T: Config> DexCaller for Pallet<T> {
 					update_asset_y_balance = liquidity_pool
 						.asset_y_balance
 						.sub(asset_max_out_balance);
+
+					update_asset_y_fee = asset_out_balance.sub(asset_max_out_balance);
 				}
 
 				if asset_exact_in == liquidity_pool.asset_pair.asset_y {
@@ -374,6 +382,8 @@ impl<T: Config> DexCaller for Pallet<T> {
 					update_asset_y_balance = liquidity_pool
 						.asset_y_balance
 						.add(FixedU128::from_inner(asset_exact_in_balance));
+
+					update_asset_x_fee = asset_out_balance.sub(asset_max_out_balance);
 				}
 
 				let update_price = <Pallet<T> as DexHelpers>::compute_price(
@@ -387,8 +397,8 @@ impl<T: Config> DexCaller for Pallet<T> {
 						asset_x_balance: update_asset_x_balance,
 						asset_y_balance: update_asset_y_balance,
 						price: update_price,
-						asset_x_fee: liquidity_pool.asset_x_fee,
-						asset_y_fee: liquidity_pool.asset_y_fee,
+						asset_x_fee: update_asset_x_fee,
+						asset_y_fee: update_asset_y_fee,
 						lp_token: liquidity_pool.lp_token,
 						lp_token_balance: liquidity_pool.lp_token_balance,
 					};
@@ -446,7 +456,10 @@ impl<T: Config> DexCaller for Pallet<T> {
 					).expect(Error::<T>::ComputePriceError.into());
 				}
 
-				let asset_min_in_balance = FixedU128::from_inner(price.into_inner()).mul(FixedU128::from_inner(asset_exact_out_balance));
+				let asset_in_balance = FixedU128::from_inner(price.into_inner()).mul(FixedU128::from_inner(asset_exact_out_balance));
+				let asset_min_in_balance = <Pallet<T> as DexHelpers>::compute_swap_fee(
+					asset_in_balance.clone().into_inner()
+				).expect(Error::<T>::ComputeSwapFeeError.into());
 
 				<Pallet<T> as DexHelpers>::check_asset_balance(
 					who.clone(),
@@ -464,6 +477,8 @@ impl<T: Config> DexCaller for Pallet<T> {
 
 				let mut update_asset_x_balance = FixedU128::from_inner(0);
 				let mut update_asset_y_balance = FixedU128::from_inner(0);
+				let mut update_asset_x_fee = FixedU128::from_inner(0);
+				let mut update_asset_y_fee = FixedU128::from_inner(0);
 
 				if asset_min_in == liquidity_pool.asset_pair.asset_x {
 					update_asset_x_balance = liquidity_pool
@@ -473,6 +488,8 @@ impl<T: Config> DexCaller for Pallet<T> {
 					update_asset_y_balance = liquidity_pool
 						.asset_y_balance
 						.sub(FixedU128::from_inner(asset_exact_out_balance));
+
+					update_asset_x_fee = asset_in_balance.sub(asset_min_in_balance);
 				}
 
 				if asset_min_in == liquidity_pool.asset_pair.asset_y {
@@ -483,6 +500,8 @@ impl<T: Config> DexCaller for Pallet<T> {
 					update_asset_y_balance = liquidity_pool
 						.asset_y_balance
 						.add(asset_min_in_balance);
+
+					update_asset_y_fee = asset_in_balance.sub(asset_min_in_balance);
 				}
 
 				let update_price = <Pallet<T> as DexHelpers>::compute_price(
@@ -496,8 +515,8 @@ impl<T: Config> DexCaller for Pallet<T> {
 						asset_x_balance: update_asset_x_balance,
 						asset_y_balance: update_asset_y_balance,
 						price: update_price,
-						asset_x_fee: liquidity_pool.asset_x_fee,
-						asset_y_fee: liquidity_pool.asset_y_fee,
+						asset_x_fee: update_asset_x_fee,
+						asset_y_fee: update_asset_y_fee,
 						lp_token: liquidity_pool.lp_token,
 						lp_token_balance: liquidity_pool.lp_token_balance,
 					};
@@ -620,17 +639,14 @@ impl<T: Config> DexHelpers for Pallet<T> {
 
 		Ok(())
 	}
-
-	fn compute_and_mint_lp_token(
+	
+	fn mint_liquidity_pool_token(
 		asset_pair: Self::AssetPairs,
-		asset_x_balance: Self::AssetBalance,
-		asset_y_balance: Self::AssetBalance,
-	) -> Result<(AssetIdOf<T>, AssetBalanceOf<T>), DispatchError> {
+	) -> Result<Self::AssetId, DispatchError> {
 		let mut lp_token: AssetIdOf<T> = 1u32.into();
 		let dex_account_id = Self::get_dex_account();
 
 		let existing_liquidity_pool = Self::get_liquidity_pool(asset_pair.clone());
-
 		match existing_liquidity_pool {
 			Some(liquidity_pool) => {
 				lp_token = liquidity_pool.lp_token;
@@ -657,6 +673,16 @@ impl<T: Config> DexHelpers for Pallet<T> {
 			},
 		}
 
+		Ok(lp_token)
+	}
+
+	fn compute_liquidity(
+		lp_token: Self::AssetId,
+		asset_x_balance: Self::AssetBalance,
+		asset_y_balance: Self::AssetBalance,
+	) -> Result<AssetBalanceOf<T>, DispatchError> {
+		let dex_account_id = Self::get_dex_account();
+
 		let mul_xy_assets = FixedU128::from_inner(asset_x_balance).mul(FixedU128::from_inner(asset_y_balance));
 		if mul_xy_assets.is_zero() {
 			return Err(Error::<T>::CannotBeZero.into())
@@ -670,7 +696,7 @@ impl<T: Config> DexHelpers for Pallet<T> {
 			lp_token_balance,
 		)?;
 
-		Ok((lp_token, lp_token_balance))
+		Ok(lp_token_balance)
 	}
 
 	fn compute_price(
@@ -723,5 +749,18 @@ impl<T: Config> DexHelpers for Pallet<T> {
 		let get_lp_token_balance = lp_token_balance;
 
 		Ok((get_asset_x_balance.into_inner(), get_asset_y_balance.into_inner(), get_lp_token_balance.into_inner()))
+	}
+
+	fn compute_swap_fee(
+		asset_balance: Self::AssetBalance
+	) -> Result<FixedU128, DispatchError> {
+		if asset_balance.is_zero() {
+			return Err(Error::<T>::CannotBeZero.into())
+		}
+
+		let swap_fee = T::SwapFee::get();
+		let remaining_balance = asset_balance.ensure_sub(swap_fee * asset_balance)?;
+		
+		Ok(FixedU128::from_inner(remaining_balance))
 	}
 }
