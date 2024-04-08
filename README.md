@@ -1,14 +1,24 @@
-# Substrate Node Template
+<img src="https://raw.githubusercontent.com/Humidefi/humidefi-dapp/main/src/assets/img/humedifi_logo_light_mode.png" style="width: 40%" />
 
-A fresh [Substrate](https://substrate.io/) node, ready for hacking :rocket:
+Welcome to the Humidefi DApp repository! This repository contains the frontend framework for Humidefi, a decentralized finance (DeFi) project operating within the Polkadot ecosystem.
 
-A standalone version of this template is available for each release of Polkadot in the [Substrate Developer Hub Parachain Template](https://github.com/substrate-developer-hub/substrate-parachain-template/) repository.
-The parachain template is generated directly at each Polkadot release branch from the [Node Template in Substrate](https://github.com/paritytech/substrate/tree/master/bin/node-template) upstream
+## 🚀 About Humidefi
+Humidefi leverages Substrate’s interoperability, runtime customization, cross-chain communication, security, and scalability features to provide easy-to-use and understandable DeFi services within the Polkadot ecosystem. The project aims to foster financial inclusion and innovation within the Polkadot network by enabling broader access to decentralized finance.
 
-It is usually best to use the stand-alone version to start a new project.
-All bugs, suggestions, and feature requests should be made upstream in the [Substrate](https://github.com/paritytech/substrate/tree/master/bin/node-template) repository.
+## ✅ Features
+* **Teleport**: Establishes a connection between Xode and the Asset Hub Parachain within the Kusama network, facilitating asset teleportation bidirectionally using the XCM protocol.
+* **Liquidity**: Allows liquidity providers to deposit asset pairs into liquidity pools and earn fees based on trading activities.
+* **Swap**: Enables users to swap between different assets with reduced slippage and fees.
+* **Redemption**: Allows liquidity pool token holders to redeem their tokens after a 60-day holding period, receiving an equivalent pair quantity based on the current price.
+* **Ecosystem** Fit: Strategically aligned with the core principles of the Polkadot ecosystem, including interoperability, customization, security, and scalability.
+* **Integration** with Xode: Enhances Xode's utility by integrating DeFi services, such as liquidity provision and asset swapping, within the Web3 Gaming platform.
 
-## Getting Started
+
+## 💻 Code Repository
+
+This project was developed using the Substrate Node Template (https://github.com/substrate-developer-hub/substrate-node-template).
+
+### Getting Started
 
 Depending on your operating system and Rust version, there might be additional packages required to compile this template.
 Check the [Install](https://docs.substrate.io/install/) instructions for your platform for the most common dependencies.
@@ -92,7 +102,7 @@ You can also find the source code and instructions for hosting your own instance
 
 If you want to see the multi-node consensus algorithm in action, see [Simulate a network](https://docs.substrate.io/tutorials/build-a-blockchain/simulate-network/).
 
-## Template Structure
+### Template Structure
 
 A Substrate project such as this consists of a number of components that are spread across a few directories.
 
@@ -118,8 +128,6 @@ Take special note of the following:
 - [`service.rs`](./node/src/service.rs): This file defines the node implementation.
   Take note of the libraries that this file imports and the names of the functions it invokes.
   In particular, there are references to consensus-related topics, such as the [block finalization and forks](https://docs.substrate.io/fundamentals/consensus/#finalization-and-forks) and other [consensus mechanisms](https://docs.substrate.io/fundamentals/consensus/#default-consensus-models) such as Aura for block authoring and GRANDPA for finality.
-
-
 
 ### Runtime
 
@@ -148,7 +156,7 @@ A FRAME pallet is comprised of a number of blockchain primitives, including:
 
 Each pallet has its own `Config` trait which serves as a configuration interface to generically define the types and parameters it depends on.
 
-## Alternatives Installations
+### Alternatives Installations
 
 Instead of installing dependencies and building this source directly, consider the following alternatives.
 
@@ -162,3 +170,17 @@ To get all the correct dependencies, activate direnv `direnv allow`.
 ### Docker
 
 Please follow the [Substrate Docker instructions here](https://github.com/paritytech/substrate/blob/master/docker/README.md) to build the Docker container with the Substrate Node Template binary.
+
+## 🧑🏻‍💻 Contributing
+Contributions to the Humidefi DApp are welcome! To contribute, please follow these guidelines:
+
+* Fork the repository.
+* Create a new branch for your feature or bug fix.
+* Make your changes and commit them with clear, descriptive messages.
+* Push your changes to your fork.
+* Submit a pull request to the main branch of the Humidefi repository.
+
+## 📝 Future Plans
+In the short term, Humidefi is focused on driving adoption through its integration with the XGame platform within Xode. This initiative aims to provide immediate liquidity to game tokens, enhancing the user experience by enabling seamless token teleportation, swapping, and transfer functionalities. Additionally, users will have the opportunity to participate in liquidity reserves and earn yields, further incentivizing engagement within the ecosystem. During periods of non-utilization, Humidefi will prioritize enhancing existing features while introducing new functionalities such as staking, loans, and other DeFi products to enrich the platform’s offerings.
+
+Looking ahead to the long term, Humidefi’s vision encompasses the creation of a dedicated Parachain and utility token, UMI, exclusively tailored for its ecosystem. To facilitate this ambitious endeavor, Humidefi plans to leverage decentralized token raises, such as Polimec, or other reputable platforms to secure the necessary funding. By establishing a dedicated Parachain and utility token, Humidefi aims to solidify its presence within the decentralized finance landscape, fostering sustainable growth and innovation within its ecosystem.
