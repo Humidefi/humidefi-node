@@ -18,6 +18,9 @@ Humidefi leverages Substrate’s interoperability, runtime customization, cross-
 
 This project was developed using the Substrate Node Template (https://github.com/substrate-developer-hub/substrate-node-template).
 
+A standalone version of this template is available for each release of Polkadot in the [Substrate Developer Hub Parachain Template](https://github.com/substrate-developer-hub/substrate-parachain-template/) repository.
+The parachain template is generated directly at each Polkadot release branch from the [Node Template in Substrate](https://github.com/paritytech/substrate/tree/master/bin/node-template) upstream.
+
 ### Getting Started
 
 Depending on your operating system and Rust version, there might be additional packages required to compile this template.
